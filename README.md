@@ -46,4 +46,4 @@ railway up
 
 ## ライセンス
 
-MIT License
+MIT License# Environment variables configured for Vercel deployment

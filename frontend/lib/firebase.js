@@ -11,10 +11,18 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Firebase初期化
-const app = initializeApp(firebaseConfig);
+// Firebase初期化（ブラウザでのみ）
+let app;
+let auth;
 
-// Auth初期化
-export const auth = getAuth(app);
+if (typeof window !== 'undefined') {
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+  } catch (error) {
+    console.warn('Firebase initialization failed:', error);
+  }
+}
 
+export { auth };
 export default app;

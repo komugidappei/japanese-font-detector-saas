@@ -22,7 +22,7 @@ const UsageLimitModal = ({ isOpen, onClose, usageInfo }) => {
               無料体験は終了しました
             </h3>
             <p className="text-sm text-gray-500 mb-6">
-              無料体験は1回限りです。続けてご利用いただくには、アカウント登録とサブスクリプションが必要です。
+              無料体験は3回までご利用いただけます。続けてご利用いただくには、アカウント登録とサブスクリプションが必要です。
             </p>
             <div className="space-y-3">
               <Link

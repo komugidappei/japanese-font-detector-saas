@@ -217,7 +217,7 @@ export default function DashboardContent() {
                             残り無料回数
                           </dt>
                           <dd className="text-lg font-medium text-gray-900">
-                            {Math.max(0, 1 - (userInfo?.usage_count || 0))} 回
+                            {Math.max(0, 3 - (userInfo?.usage_count || 0))} 回
                           </dd>
                         </dl>
                       </div>

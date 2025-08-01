@@ -157,7 +157,7 @@ export default function Home() {
               </div>
             ) : (
               <p className="text-lg text-green-600">
-                🎉 無料体験をお試しください（1回限り）
+                🎉 無料体験をお試しください（3回まで）
               </p>
             )}
           </div>

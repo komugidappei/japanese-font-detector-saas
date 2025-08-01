@@ -209,8 +209,8 @@ async def check_usage_limit(
     if session_id:
         usage_count = await check_session_usage(session_id)
         return {
-            "can_use": usage_count < 1,
-            "reason": "free_trial_used" if usage_count >= 1 else "free_trial_available",
+            "can_use": usage_count < 3,
+            "reason": "free_trial_used" if usage_count >= 3 else "free_trial_available",
             "user_type": "anonymous",
             "usage_count": usage_count
         }
@@ -259,7 +259,7 @@ async def detect_font_from_image(
         # 匿名ユーザーの場合
         if session_id:
             usage_count = await check_session_usage(session_id)
-            if usage_count >= 1:
+            if usage_count >= 3:
                 raise HTTPException(status_code=403, detail="Free trial already used")
         else:
             raise HTTPException(status_code=400, detail="Session ID required")

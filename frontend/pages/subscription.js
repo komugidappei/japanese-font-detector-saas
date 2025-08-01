@@ -188,12 +188,12 @@ export default function Subscription() {
               <div className="mb-4">
                 <span className="text-4xl font-bold text-gray-900">¥0</span>
               </div>
-              <p className="text-gray-600 mb-6">1回限り無料でお試し</p>
+              <p className="text-gray-600 mb-6">3回まで無料でお試し</p>
               
               <ul className="text-left space-y-3 mb-8">
                 <li className="flex items-center">
                   <CheckIcon className="h-5 w-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">フォント検出 1回</span>
+                  <span className="text-gray-700">フォント検出 3回</span>
                 </li>
                 <li className="flex items-center">
                   <CheckIcon className="h-5 w-5 text-green-500 mr-3" />

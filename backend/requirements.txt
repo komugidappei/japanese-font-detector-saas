@@ -10,7 +10,6 @@ opencv-python-headless>=4.5.0
 numpy>=1.21.0
 scipy>=1.7.0
 scikit-image>=0.19.0
-tensorflow-cpu>=2.8.0,<2.13.0
 scikit-learn>=1.0.0
 requests>=2.25.0
 pydantic>=1.8.0

@@ -24,8 +24,8 @@ import asyncio
 FIREBASE_CREDENTIALS_PATH = os.getenv("FIREBASE_CREDENTIALS_PATH")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL") or "https://dummy.supabase.co"
+SUPABASE_KEY = os.getenv("SUPABASE_KEY") or "dummy-key"
 
 # Firebase初期化
 if FIREBASE_CREDENTIALS_PATH and os.path.exists(FIREBASE_CREDENTIALS_PATH):
@@ -35,8 +35,12 @@ if FIREBASE_CREDENTIALS_PATH and os.path.exists(FIREBASE_CREDENTIALS_PATH):
 # Stripe初期化
 stripe.api_key = STRIPE_SECRET_KEY
 
-# Supabase初期化
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Supabase初期化 (デプロイテスト用にダミー値でも動作するように)
+try:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+except Exception as e:
+    print(f"Warning: Supabase initialization failed: {e}")
+    supabase = None
 
 # FastAPI初期化
 app = FastAPI(title="Font Detection SaaS API", version="1.0.0")
@@ -86,6 +90,8 @@ async def verify_firebase_token(credentials: HTTPAuthorizationCredentials = Depe
 async def get_user_by_firebase_uid(firebase_uid: str) -> Optional[dict]:
     """Firebase UIDからユーザー情報を取得"""
     try:
+        if not supabase:
+            return None
         result = supabase.table("users").select("*").eq("firebase_uid", firebase_uid).execute()
         return result.data[0] if result.data else None
     except Exception:
@@ -93,6 +99,9 @@ async def get_user_by_firebase_uid(firebase_uid: str) -> Optional[dict]:
 
 async def create_user(firebase_uid: str, email: str) -> dict:
     """新規ユーザーを作成"""
+    if not supabase:
+        return {"id": "mock-user-id", "firebase_uid": firebase_uid, "email": email}
+    
     user_data = {
         "firebase_uid": firebase_uid,
         "email": email,
@@ -106,6 +115,8 @@ async def create_user(firebase_uid: str, email: str) -> dict:
 async def get_active_subscription(user_id: str) -> Optional[dict]:
     """アクティブなサブスクリプションを取得"""
     try:
+        if not supabase:
+            return None
         result = supabase.table("subscriptions").select("*").eq("user_id", user_id).eq("status", "active").execute()
         return result.data[0] if result.data else None
     except Exception:
@@ -114,6 +125,8 @@ async def get_active_subscription(user_id: str) -> Optional[dict]:
 async def check_session_usage(session_id: str) -> int:
     """セッションの使用回数をチェック"""
     try:
+        if not supabase:
+            return 0  # モック: 常に使用可能
         result = supabase.table("usage_logs").select("count").eq("session_id", session_id).execute()
         return len(result.data) if result.data else 0
     except Exception:
@@ -122,6 +135,10 @@ async def check_session_usage(session_id: str) -> int:
 async def log_usage(user_id: Optional[str], session_id: Optional[str], 
                    image_hash: str, method: str, results: dict):
     """使用ログを記録"""
+    if not supabase:
+        print(f"Mock: Would log usage for user {user_id}, session {session_id}")
+        return
+    
     log_data = {
         "user_id": user_id,
         "session_id": session_id,
@@ -318,6 +335,9 @@ async def get_detection_history(
         raise HTTPException(status_code=404, detail="User not found")
     
     try:
+        if not supabase:
+            return {"history": []}
+            
         result = supabase.table("usage_logs")\
             .select("*")\
             .eq("user_id", user["id"])\

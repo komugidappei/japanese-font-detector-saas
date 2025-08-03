@@ -205,22 +205,27 @@ async def get_current_user(token_data: dict = Depends(verify_firebase_token)):
 @app.get("/usage/check")
 async def check_usage_limit(
     session_id: Optional[str] = Header(None, alias="X-Session-ID"),
-    token_data: Optional[dict] = Depends(verify_firebase_token)
+    authorization: Optional[str] = Header(None)
 ):
     """使用制限をチェック"""
     
-    if token_data:
-        # 認証ユーザー: サブスクリプション確認
-        firebase_uid = token_data["uid"]
-        user = await get_user_by_firebase_uid(firebase_uid)
-        
-        if user:
-            subscription = await get_active_subscription(user["id"])
-            return {
-                "can_use": subscription is not None,
-                "reason": "subscription_required" if not subscription else "unlimited",
-                "user_type": "authenticated"
-            }
+    # Firebase認証トークンがある場合
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            token = authorization.split("Bearer ")[1]
+            decoded_token = auth.verify_id_token(token)
+            firebase_uid = decoded_token["uid"]
+            user = await get_user_by_firebase_uid(firebase_uid)
+            
+            if user:
+                subscription = await get_active_subscription(user["id"])
+                return {
+                    "can_use": subscription is not None,
+                    "reason": "subscription_required" if not subscription else "unlimited",
+                    "user_type": "authenticated"
+                }
+        except Exception:
+            pass  # 認証失敗時は匿名ユーザーとして扱う
     
     # 匿名ユーザー: セッション使用回数確認
     if session_id:
@@ -245,7 +250,7 @@ async def detect_font_from_image(
     file: UploadFile = File(...),
     method: str = "ssim",
     session_id: Optional[str] = Header(None, alias="X-Session-ID"),
-    token_data: Optional[dict] = Depends(verify_firebase_token)
+    authorization: Optional[str] = Header(None)
 ):
     """画像からフォントを検出"""
     start_time = datetime.now()
@@ -264,16 +269,24 @@ async def detect_font_from_image(
     
     # 使用制限チェック
     user_id = None
-    if token_data:
-        firebase_uid = token_data["uid"]
-        user = await get_user_by_firebase_uid(firebase_uid)
-        if user:
-            user_id = user["id"]
-            subscription = await get_active_subscription(user_id)
-            if not subscription:
-                raise HTTPException(status_code=403, detail="Active subscription required")
-    else:
-        # 匿名ユーザーの場合
+    
+    # Firebase認証トークンがある場合
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            token = authorization.split("Bearer ")[1]
+            decoded_token = auth.verify_id_token(token)
+            firebase_uid = decoded_token["uid"]
+            user = await get_user_by_firebase_uid(firebase_uid)
+            if user:
+                user_id = user["id"]
+                subscription = await get_active_subscription(user_id)
+                if not subscription:
+                    raise HTTPException(status_code=403, detail="Active subscription required")
+        except Exception:
+            pass  # 認証失敗時は匿名ユーザーとして扱う
+    
+    # 匿名ユーザーの場合
+    if not user_id:
         if session_id:
             usage_count = await check_session_usage(session_id)
             if usage_count >= 3:

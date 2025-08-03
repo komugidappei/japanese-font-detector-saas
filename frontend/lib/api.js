@@ -49,10 +49,16 @@ const generateSessionId = () => {
 // 使用制限チェック
 export const checkUsageLimit = async () => {
   try {
+    console.log('Checking usage limit...');
+    const sessionId = getSessionId();
+    console.log('Session ID:', sessionId);
+    
     const response = await apiClient.get('/usage/check');
+    console.log('Usage check response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Usage check failed:', error);
+    console.error('Error response:', error.response?.data);
     return { can_use: false, reason: 'error' };
   }
 };

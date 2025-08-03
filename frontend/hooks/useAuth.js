@@ -26,38 +26,22 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
+    // Firebase認証が無効化されているため、常に未認証状態に設定
+    console.log('Auth disabled, setting user to null');
+    setUser(null);
+    setUserInfo(null);
+    setLoading(false);
+    
+    if (auth && auth.onAuthStateChanged) {
+      const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
         setUser(firebaseUser);
-        
-        try {
-          // バックエンドからユーザー情報を取得
-          const userData = await getCurrentUser();
-          setUserInfo(userData);
-        } catch (error) {
-          console.error('Failed to get user info:', error);
-          // ユーザーが未登録の場合は登録
-          try {
-            await registerUser();
-            const userData = await getCurrentUser();
-            setUserInfo(userData);
-          } catch (registerError) {
-            console.error('Failed to register user:', registerError);
-          }
+        if (!firebaseUser) {
+          setUserInfo(null);
         }
-      } else {
-        setUser(null);
-        setUserInfo(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    }
   }, []);
 
   const login = async (email, password) => {

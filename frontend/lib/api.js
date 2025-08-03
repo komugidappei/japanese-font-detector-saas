@@ -14,10 +14,14 @@ const apiClient = axios.create({
 
 // リクエストインターセプター（認証トークン追加）
 apiClient.interceptors.request.use(async (config) => {
-  const user = auth.currentUser;
-  if (user) {
-    const token = await user.getIdToken();
-    config.headers.Authorization = `Bearer ${token}`;
+  try {
+    const user = auth?.currentUser;
+    if (user) {
+      const token = await user.getIdToken();
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    console.warn('Firebase auth not initialized, proceeding as anonymous user');
   }
   
   // セッションIDを追加（匿名ユーザー用）
@@ -77,7 +81,12 @@ export const detectFont = async (file, method = 'ssim') => {
     });
     
     // 使用回数をローカルストレージに記録（匿名ユーザー用）
-    if (!auth.currentUser) {
+    try {
+      if (!auth?.currentUser) {
+        markTrialUsed();
+      }
+    } catch (error) {
+      // Firebase未初期化の場合は匿名ユーザーとして扱う
       markTrialUsed();
     }
     

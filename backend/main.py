@@ -126,7 +126,9 @@ async def check_session_usage(session_id: str) -> int:
     """セッションの使用回数をチェック"""
     try:
         if not supabase:
-            return 0  # モック: 常に使用可能
+            # モック: ローカルに保存されたセッション使用回数を返す（本来はDB）
+            # 実際にはSupabaseがないので、常に0を返して無制限に使えるようにする
+            return 0
         result = supabase.table("usage_logs").select("count").eq("session_id", session_id).execute()
         return len(result.data) if result.data else 0
     except Exception:
